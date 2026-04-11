@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: #F5F3EF;
+  --color-foreground: #1C1917;
+  --color-card: #FAF9F7;
+  --color-card-foreground: #1C1917;
+
+  --color-primary: #1B4332;
+  --color-primary-light: #2D6A4F;
+  --color-primary-dark: #0F2920;
+  --color-primary-foreground: #F5F3EF;
+  --color-primary-50: #E8F5EE;
+  --color-primary-100: #D1EBE0;
+  --color-primary-200: #A3D7C1;
+  --color-primary-300: #74C3A2;
+  --color-primary-400: #46AF83;
+  --color-primary-500: #2D6A4F;
+  --color-primary-600: #1B4332;
+  --color-primary-700: #143325;
+  --color-primary-800: #0F2920;
+  --color-primary-900: #081A14;
+
+  --color-gold: #C9A84C;
+  --color-gold-light: #D4BA6A;
+  --color-gold-dark: #A88B3A;
+  --color-gold-50: #FBF6E8;
+  --color-gold-100: #F5ECD0;
+  --color-gold-200: #EBD9A1;
+  --color-gold-300: #E1C672;
+  --color-gold-400: #D4BA6A;
+  --color-gold-500: #C9A84C;
+  --color-gold-600: #A88B3A;
+
+  --color-secondary: #EDE9E3;
+  --color-secondary-foreground: #1C1917;
+  --color-muted: #EDE9E3;
+  --color-muted-foreground: #57534E;
+
+  --color-success: #198754;
+  --color-warning: #F59E0B;
+  --color-danger: #DC3545;
+  --color-info: #0EA5E9;
+
+  --color-surface: #FFFFFF;
+  --color-surface-secondary: #F5F3EF;
+  --color-surface-tertiary: #EDE9E3;
+  --color-border: #D6D3CD;
+  --color-border-light: #EDE9E3;
+  --color-text: #1C1917;
+  --color-text-secondary: #57534E;
+  --color-text-muted: #A8A29E;
+  --color-ring: #1B4332;
+
+  --color-sidebar: #132A1F;
+  --color-sidebar-hover: #1B3A2B;
+  --color-sidebar-active: #244A37;
+  --color-sidebar-text: #A8C4B5;
+  --color-sidebar-text-active: #F0FFF4;
+  --color-sidebar-border: #1E3D2E;
+  --color-sidebar-muted: #5E8A74;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "ss02", "cv01";
+  letter-spacing: -0.005em;
+  color: var(--color-foreground);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Utility classes matching sbh-crm-web */
+.surface-elevated {
+  background-color: var(--color-card);
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 0 rgba(28, 25, 23, 0.04);
+}
+
+.btn-action {
+  height: 2.75rem;
+  padding: 0 1.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-foreground);
+  color: var(--color-primary-foreground);
+  font-weight: 500;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 200ms;
+  box-shadow: 0 1px 0 0 rgba(28, 25, 23, 0.28);
+  cursor: pointer;
+  border: none;
+}
+.btn-action:hover {
+  opacity: 0.95;
+}
+.btn-action:active {
+  transform: scale(0.99);
+}
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.press {
+  transition: transform 150ms;
+}
+.press:active {
+  transform: scale(0.985);
+}
+
+/* Font standardization */
+.font-std {
+  font-size: 14px;
+}
+.font-std h1, .font-std .page-header {
+  font-size: 20px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite;
+}
+
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
