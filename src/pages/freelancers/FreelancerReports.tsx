@@ -193,28 +193,53 @@ export function FreelancerReports() {
             <CardTitle>Cost by Role Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[200px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={costByRole}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={3}
-                    dataKey="value"
-                    nameKey="name"
-                    stroke="none"
-                  >
-                    {costByRole.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => formatCurrency(value)} contentStyle={{ borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "13px" }} />
-                  <Legend verticalAlign="bottom" iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-muted-foreground ml-1">{value}</span>} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="flex items-start gap-4">
+              <div className="shrink-0" style={{ width: 180, height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={costByRole}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={82}
+                      paddingAngle={1}
+                      dataKey="value"
+                      nameKey="name"
+                      startAngle={90}
+                      endAngle={-270}
+                      stroke="none"
+                    >
+                      {costByRole.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any) => formatCurrency(value)} contentStyle={{ borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "12px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-1.5 pt-2">
+                {costByRole.map((entry) => {
+                  const total = costByRole.reduce((s, c) => s + c.value, 0)
+                  const pct = total > 0 ? (entry.value / total) * 100 : 0
+                  return (
+                    <div key={entry.name} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+                        <span className="text-xs text-foreground truncate">{entry.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-xs font-medium text-foreground">{formatCurrencyShort(entry.value)}</span>
+                        <span className="text-[10px] text-muted-foreground w-10 text-right">{pct.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="border-t border-border pt-1.5 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-foreground">Total</span>
+                  <span className="text-xs font-semibold text-foreground">{formatCurrencyShort(costByRole.reduce((s, c) => s + c.value, 0))}</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

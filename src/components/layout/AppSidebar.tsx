@@ -108,8 +108,14 @@ export function AppSidebar() {
     })
   }
 
-  const isActive = (path: string) =>
-    location.pathname === path || (path !== "/" && path !== "/dashboard" && location.pathname.startsWith(path))
+  // Exact-match paths: these are "index" routes that share a prefix with child routes
+  const exactMatchPaths = new Set(['/sales', '/payments', '/freelancers', '/vendors', '/reimbursements'])
+
+  const isActive = (path: string) => {
+    if (location.pathname === path) return true
+    if (exactMatchPaths.has(path)) return false
+    return path !== "/" && path !== "/dashboard" && location.pathname.startsWith(path)
+  }
 
   const isGroupActive = (group: NavGroup) => group.items.some(i => isActive(i.path))
 
