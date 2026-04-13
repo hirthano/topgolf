@@ -1,6 +1,7 @@
 import {
   TrendingUp, Globe, ShoppingBag, Calendar, Users,
   Target, Zap, BarChart3, Lightbulb, Sun, Clock, RefreshCw,
+  ExternalLink,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -9,6 +10,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 type InsightSource = 'internal' | 'industry'
+
+interface Reference {
+  name: string
+  url: string
+}
 
 interface TrendInsight {
   id: string
@@ -23,6 +29,7 @@ interface TrendInsight {
   recommendation: string
   source: InsightSource
   lastUpdated: string
+  references: Reference[]
 }
 
 const trends: TrendInsight[] = [
@@ -46,6 +53,11 @@ const trends: TrendInsight[] = [
       'Expand regional presence strategically. Surabaya and Bandung branches should receive increased inventory allocation and marketing budget. Consider Medan and Makassar as next expansion targets based on golf course density and disposable income data.',
     source: 'industry',
     lastUpdated: '2026-04-01',
+    references: [
+      { name: 'Statista — Golf Equipment Market Indonesia', url: 'https://www.statista.com/outlook/cmo/toys-hobby/sports-equipment/golf-equipment/indonesia' },
+      { name: 'Ken Research — Indonesia Sports & Leisure Market', url: 'https://www.kenresearch.com/industry-reports/indonesia-sports-leisure-market' },
+      { name: 'PGI — Persatuan Golf Indonesia', url: 'https://www.pfrgindonesia.org' },
+    ],
   },
   {
     id: 'trend-2',
@@ -67,6 +79,11 @@ const trends: TrendInsight[] = [
       'Double down on MAJESTY and TITLEIST partnerships. Create exclusive Topgolf edition products with Japanese brand partners. Implement a premium customer loyalty program targeting high-value repeat buyers at SCBD, Pondok Indah, and Plaza Indonesia branches.',
     source: 'internal',
     lastUpdated: '2026-04-07',
+    references: [
+      { name: 'MAJESTY Golf Official', url: 'https://www.majesty-golf.com' },
+      { name: 'Golf Datatech — Global Market Report', url: 'https://www.golfdatatech.com' },
+      { name: 'Topgolf Internal Sales Analytics', url: '#' },
+    ],
   },
   {
     id: 'trend-3',
@@ -88,6 +105,11 @@ const trends: TrendInsight[] = [
       'Invest in expanding fitting bays by 30% at top-5 Jakarta branches. Add TrackMan and Foresight launch monitors. Bundle fitting sessions with premium club purchases -- current 23% attach rate has significant room to grow to 50%+, representing an additional Rp 15B+ annual revenue opportunity.',
     source: 'internal',
     lastUpdated: '2026-04-07',
+    references: [
+      { name: 'TrackMan — Club Fitting Technology', url: 'https://www.trackman.com' },
+      { name: 'Foresight Sports — Launch Monitors', url: 'https://www.foresightsports.com' },
+      { name: 'Golf Digest — The Case for Club Fitting', url: 'https://www.golfdigest.com/story/club-fitting-guide' },
+    ],
   },
   {
     id: 'trend-4',
@@ -109,6 +131,11 @@ const trends: TrendInsight[] = [
       'Launch dedicated "Ladies Golf" and "Junior Academy" programs at 5 flagship branches. Partner with women golf influencers for social media campaigns. Stock women-specific equipment lines and create Instagram-worthy in-store experiences. This demographic represents the fastest-growing segment with high lifetime value.',
     source: 'internal',
     lastUpdated: '2026-04-07',
+    references: [
+      { name: 'R&A — Women in Golf Charter', url: 'https://www.randa.org/en/campaigns/women-in-golf-charter' },
+      { name: 'National Golf Foundation — Participation Report', url: 'https://www.ngf.org/golf-industry-research' },
+      { name: 'Topgolf Internal Fitting & Program Data', url: '#' },
+    ],
   },
   {
     id: 'trend-5',
@@ -130,6 +157,10 @@ const trends: TrendInsight[] = [
       'Pre-position inventory 8 weeks before peak periods (MAJESTY supply chain lead time). Create Lebaran gift sets for corporate buyers at SCBD and Plaza Indonesia. Run "New Year, New Gear" promotions in January to mitigate the post-holiday dip. Staff up with 20% additional part-time promoters during peak weeks.',
     source: 'internal',
     lastUpdated: '2026-04-07',
+    references: [
+      { name: 'BPS — Indonesian Consumer Spending Trends', url: 'https://www.bps.go.id' },
+      { name: 'Topgolf Internal Seasonal Sales Data', url: '#' },
+    ],
   },
   {
     id: 'trend-6',
@@ -151,6 +182,11 @@ const trends: TrendInsight[] = [
       'Hire a dedicated social commerce manager. Launch bi-weekly live shopping events on Shopee featuring product demos and flash deals. Negotiate improved settlement terms with Shopee (current T+4 vs stated T+3). Partner with 3-5 golf micro-influencers for authentic content creation.',
     source: 'industry',
     lastUpdated: '2026-04-01',
+    references: [
+      { name: 'Shopee Seller Centre — Settlement Policy', url: 'https://seller.shopee.co.id' },
+      { name: 'We Are Social — Digital Indonesia Report 2026', url: 'https://wearesocial.com/digital-2026' },
+      { name: 'Hootsuite — Social Commerce Trends', url: 'https://www.hootsuite.com/research/social-trends' },
+    ],
   },
   {
     id: 'trend-7',
@@ -172,6 +208,11 @@ const trends: TrendInsight[] = [
       'Defend premium positioning by deepening brand partnerships (exclusive product launches with MAJESTY and TITLEIST). Differentiate through fitting services -- competitors cannot easily replicate this capability. Avoid price wars with MST Golf; instead, focus on value-added services and customer experience.',
     source: 'industry',
     lastUpdated: '2026-04-01',
+    references: [
+      { name: 'Golf House Indonesia', url: 'https://www.golfhouse.co.id' },
+      { name: 'MST Golf — Official', url: 'https://www.mstgolf.com' },
+      { name: 'The Golf Shop Indonesia', url: 'https://www.thegolfshop.co.id' },
+    ],
   },
   {
     id: 'trend-8',
@@ -193,6 +234,11 @@ const trends: TrendInsight[] = [
       'Introduce eco-friendly product lines from brands like adidas (Parley collection) and PUMA (sustainable materials). Implement recyclable packaging across all branches. Position Topgolf as the sustainability leader in Indonesian golf retail -- this differentiator will attract corporate partnerships and ESG-conscious consumers.',
     source: 'industry',
     lastUpdated: '2026-04-01',
+    references: [
+      { name: 'GEO Foundation — Sustainability in Golf', url: 'https://www.sustainable.golf' },
+      { name: 'adidas — Parley Ocean Plastic', url: 'https://www.adidas.com/us/parley' },
+      { name: 'McKinsey — ESG in Consumer Retail', url: 'https://www.mckinsey.com/industries/retail/our-insights' },
+    ],
   },
 ]
 
@@ -291,6 +337,27 @@ export function TrendsPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* References / Sources */}
+                {trend.references.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Sources</p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {trend.references.map((ref, ri) => (
+                        <a
+                          key={ri}
+                          href={ref.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 hover:underline transition-colors"
+                        >
+                          <ExternalLink size={9} className="shrink-0" />
+                          {ref.name}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )

@@ -82,7 +82,7 @@ export interface Product {
 
 export interface BranchReport {
   branch: string
-  status: 'synced' | 'partial' | 'missing'
+  status: 'synced' | 'missing'
   lastSync: string
   pic: string
   revenue: number

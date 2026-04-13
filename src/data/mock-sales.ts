@@ -259,10 +259,10 @@ export const branchReports: BranchReport[] = branchConfigs.map((branch) => {
 
   // Sync status
   const syncRoll = rand()
-  const status: BranchReport['status'] = syncRoll < 0.75 ? 'synced' : syncRoll < 0.92 ? 'partial' : 'missing'
+  const status: BranchReport['status'] = syncRoll < 0.85 ? 'synced' : 'missing'
 
-  // Last sync within last few hours for synced, longer for others
-  const hoursAgo = status === 'synced' ? randInt(0, 3) : status === 'partial' ? randInt(6, 24) : randInt(24, 72)
+  // Last sync within last few hours for synced, longer for missing
+  const hoursAgo = status === 'synced' ? randInt(0, 3) : randInt(24, 72)
   const lastSync = new Date('2026-04-11T10:00:00+07:00')
   lastSync.setHours(lastSync.getHours() - hoursAgo)
 

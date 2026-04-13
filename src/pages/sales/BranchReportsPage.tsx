@@ -16,46 +16,16 @@ import { Button } from "@/components/ui/button"
 
 // --- Sync status model with dual dimensions ---
 interface SyncDetail {
-  posSync: 'synced' | 'partial' | 'missing'
+  posSync: 'synced' | 'missing'
   picConfirmed: boolean
   registersTotal: number
   registersSynced: number
-  partialReason?: string
+  missingReason?: string
 }
 
 function buildSyncDetail(report: BranchReport): SyncDetail {
-  // Simulate realistic dual-dimension sync status
   if (report.status === 'synced') {
     return { posSync: 'synced', picConfirmed: true, registersTotal: 4, registersSynced: 4 }
-  }
-  if (report.status === 'partial') {
-    // Randomize partial reason based on branch name hash
-    const hash = report.branch.length % 3
-    if (hash === 0) {
-      return {
-        posSync: 'synced',
-        picConfirmed: false,
-        registersTotal: 4,
-        registersSynced: 4,
-        partialReason: 'POS data received, awaiting PIC confirmation',
-      }
-    } else if (hash === 1) {
-      return {
-        posSync: 'partial',
-        picConfirmed: false,
-        registersTotal: 4,
-        registersSynced: 3,
-        partialReason: '3 of 4 terminals synced — Register 4 pending',
-      }
-    } else {
-      return {
-        posSync: 'partial',
-        picConfirmed: false,
-        registersTotal: 4,
-        registersSynced: 2,
-        partialReason: 'Afternoon transactions not yet received',
-      }
-    }
   }
   // missing
   return {
@@ -63,7 +33,7 @@ function buildSyncDetail(report: BranchReport): SyncDetail {
     picConfirmed: false,
     registersTotal: 4,
     registersSynced: 0,
-    partialReason: 'No POS data received — check API connection',
+    missingReason: 'No POS data received — check API connection',
   }
 }
 
@@ -73,12 +43,6 @@ function getSyncBadge(status: BranchReport['status']) {
       return (
         <Badge variant="success" className="gap-1">
           <CheckCircle2 size={12} /> Synced
-        </Badge>
-      )
-    case 'partial':
-      return (
-        <Badge variant="warning" className="gap-1">
-          <AlertCircle size={12} /> Partial
         </Badge>
       )
     case 'missing':
@@ -347,8 +311,6 @@ function BranchDetailView({ report, onBack }: { report: BranchReport; onBack: ()
             <div className="flex items-start gap-3 rounded-lg border border-border p-3">
               {syncDetail.posSync === 'synced' ? (
                 <Wifi size={18} className="text-emerald-600 mt-0.5 shrink-0" />
-              ) : syncDetail.posSync === 'partial' ? (
-                <Wifi size={18} className="text-amber-500 mt-0.5 shrink-0" />
               ) : (
                 <WifiOff size={18} className="text-red-500 mt-0.5 shrink-0" />
               )}
@@ -359,8 +321,6 @@ function BranchDetailView({ report, onBack }: { report: BranchReport; onBack: ()
                 </p>
                 {syncDetail.posSync === 'synced' ? (
                   <Badge variant="success" className="mt-1 text-[10px]">Complete</Badge>
-                ) : syncDetail.posSync === 'partial' ? (
-                  <Badge variant="warning" className="mt-1 text-[10px]">Partial</Badge>
                 ) : (
                   <Badge variant="danger" className="mt-1 text-[10px]">Missing</Badge>
                 )}
@@ -381,10 +341,10 @@ function BranchDetailView({ report, onBack }: { report: BranchReport; onBack: ()
               </div>
             </div>
           </div>
-          {syncDetail.partialReason && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
+          {syncDetail.missingReason && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-700">
               <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              {syncDetail.partialReason}
+              {syncDetail.missingReason}
             </div>
           )}
         </CardContent>
@@ -462,7 +422,6 @@ export function BranchReportsPage() {
 
   const syncStats = useMemo(() => ({
     synced: branchReports.filter(r => r.status === 'synced').length,
-    partial: branchReports.filter(r => r.status === 'partial').length,
     missing: branchReports.filter(r => r.status === 'missing').length,
     total: branchReports.length,
   }), [])
@@ -501,18 +460,16 @@ export function BranchReportsPage() {
         />
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm font-medium text-muted-foreground mb-3">Sync Status</p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-success" />
               <span className="text-sm font-semibold text-foreground">{syncStats.synced}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-warning" />
-              <span className="text-sm font-semibold text-foreground">{syncStats.partial}</span>
+              <span className="text-xs text-muted-foreground">Synced</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="h-3 w-3 rounded-full bg-danger" />
               <span className="text-sm font-semibold text-foreground">{syncStats.missing}</span>
+              <span className="text-xs text-muted-foreground">Missing</span>
             </div>
           </div>
           <div className="mt-2 space-y-1 text-xs text-text-muted">
@@ -527,13 +484,13 @@ export function BranchReportsPage() {
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Submitted</span>
               <span className="font-semibold text-foreground">
-                {syncStats.synced + syncStats.partial}/{syncStats.total}
+                {syncStats.synced}/{syncStats.total}
               </span>
             </div>
             <div className="h-2 rounded-full bg-secondary overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${((syncStats.synced + syncStats.partial) / syncStats.total) * 100}%` }}
+                style={{ width: `${(syncStats.synced / syncStats.total) * 100}%` }}
               />
             </div>
           </div>
@@ -574,7 +531,11 @@ export function BranchReportsPage() {
                 {/* Dual-dimension sync indicators */}
                 <div className="flex items-center gap-3 text-xs text-text-muted pt-1">
                   <span className="flex items-center gap-1">
-                    <Wifi size={10} className={detail.posSync === 'synced' ? 'text-emerald-500' : detail.posSync === 'partial' ? 'text-amber-500' : 'text-red-400'} />
+                    {detail.posSync === 'synced' ? (
+                      <Wifi size={10} className="text-emerald-500" />
+                    ) : (
+                      <WifiOff size={10} className="text-red-400" />
+                    )}
                     POS {detail.registersSynced}/{detail.registersTotal}
                   </span>
                   <span className="flex items-center gap-1">
