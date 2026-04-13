@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   ClipboardCheck, CheckCircle2, XCircle, RotateCcw, MessageSquare,
-  FileImage, Info, CheckSquare, Square,
+  FileImage, Info, CheckSquare, Square, X,
 } from "lucide-react"
 
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -149,32 +149,32 @@ export function ApprovalsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Request List */}
-        <div className="lg:col-span-2 space-y-3">
-          {/* Batch header */}
-          {batchEligible.length > 0 && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
-              <button onClick={toggleAllBatch} className="hover:text-foreground transition-colors">
-                {batchSelected.size === batchEligible.length ? (
-                  <CheckSquare size={16} className="text-primary" />
-                ) : (
-                  <Square size={16} />
-                )}
-              </button>
-              <span>Select all under Rp 500.000 for batch approval</span>
-            </div>
-          )}
+      {/* Request List — full width */}
+      <div className="space-y-3">
+        {/* Batch header */}
+        {batchEligible.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground px-1">
+            <button onClick={toggleAllBatch} className="hover:text-foreground transition-colors">
+              {batchSelected.size === batchEligible.length ? (
+                <CheckSquare size={16} className="text-primary" />
+              ) : (
+                <Square size={16} />
+              )}
+            </button>
+            <span>Select all under Rp 500.000 for batch approval</span>
+          </div>
+        )}
 
-          {pendingRequests.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2" />
-                <p className="text-muted-foreground">All caught up! No pending approvals.</p>
-              </CardContent>
-            </Card>
-          ) : (
-            pendingRequests.map((r) => (
+        {pendingRequests.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-2" />
+              <p className="text-muted-foreground">All caught up! No pending approvals.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {pendingRequests.map((r) => (
               <Card
                 key={r.id}
                 className={`cursor-pointer transition-all card-hover ${
@@ -216,139 +216,158 @@ export function ApprovalsPage() {
                       <div className="flex items-center gap-3 mt-2 text-xs text-text-muted">
                         <span>Submitted: {formatDate(r.dateSubmitted)}</span>
                         <span>{r.department}</span>
+                        <span className="ml-auto text-primary font-medium">
+                          Step {r.currentStep + 1}/{r.approvalChain.length}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-        {/* Detail Panel */}
-        <div className="lg:col-span-3 space-y-4">
-          {selectedRequest ? (
-            <>
+      {/* Off-Canvas Detail Panel */}
+      {selectedId && selectedRequest && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 transition-opacity"
+            onClick={() => setSelectedId(null)}
+          />
+
+          {/* Slide-out panel */}
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-surface border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <h2 className="text-base font-bold text-foreground truncate">{selectedRequest.id}</h2>
+                <StatusBadge status={selectedRequest.status} />
+              </div>
+              <button
+                onClick={() => setSelectedId(null)}
+                className="rounded-md p-1.5 hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Panel body — scrollable */}
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
               {/* Request Detail */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>Request Detail - {selectedRequest.id}</CardTitle>
-                    <StatusBadge status={selectedRequest.status} />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-text-muted block text-xs">Employee</span>
-                      <span className="font-medium text-foreground">{selectedRequest.employeeName}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Department</span>
-                      <span className="font-medium text-foreground">{selectedRequest.department}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Category</span>
-                      <span className="font-medium text-foreground">{selectedRequest.category}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Branch</span>
-                      <span className="font-medium text-foreground">{selectedRequest.branch}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Expense Date</span>
-                      <span className="font-medium text-foreground">{formatDate(selectedRequest.dateExpense)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-muted block text-xs">Amount</span>
-                      <span className="font-bold text-lg text-primary">{formatCurrency(selectedRequest.amount)}</span>
-                    </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-foreground">Request Detail</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-text-muted block text-xs">Employee</span>
+                    <span className="font-medium text-foreground">{selectedRequest.employeeName}</span>
                   </div>
                   <div>
-                    <span className="text-text-muted block text-xs mb-1">Description</span>
-                    <p className="text-sm text-foreground bg-secondary rounded-lg p-3">{selectedRequest.description}</p>
+                    <span className="text-text-muted block text-xs">Department</span>
+                    <span className="font-medium text-foreground">{selectedRequest.department}</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <span className="text-text-muted block text-xs">Category</span>
+                    <span className="font-medium text-foreground">{selectedRequest.category}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted block text-xs">Branch</span>
+                    <span className="font-medium text-foreground">{selectedRequest.branch}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted block text-xs">Expense Date</span>
+                    <span className="font-medium text-foreground">{formatDate(selectedRequest.dateExpense)}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-muted block text-xs">Amount</span>
+                    <span className="font-bold text-lg text-primary">{formatCurrency(selectedRequest.amount)}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-text-muted block text-xs mb-1">Description</span>
+                  <p className="text-sm text-foreground bg-secondary rounded-lg p-3">{selectedRequest.description}</p>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border" />
 
               {/* Receipt Preview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <FileImage size={16} className="text-primary" />
-                    Receipt Preview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center h-48 rounded-lg bg-secondary border border-border-light">
-                    <div className="text-center space-y-2">
-                      <FileImage size={36} className="mx-auto text-text-muted" />
-                      <div className="text-xs text-text-muted space-y-0.5">
-                        <p className="font-mono">RECEIPT</p>
-                        <p>{selectedRequest.category}</p>
-                        <p>{formatCurrency(selectedRequest.amount)}</p>
-                        <p>{formatDate(selectedRequest.dateExpense)}</p>
-                        <p className="text-[10px] mt-1">{selectedRequest.receiptUrl || "No receipt attached"}</p>
-                      </div>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <FileImage size={14} className="text-primary" />
+                  Receipt Preview
+                </h3>
+                <div className="flex items-center justify-center h-40 rounded-lg bg-secondary border border-border-light">
+                  <div className="text-center space-y-1.5">
+                    <FileImage size={28} className="mx-auto text-text-muted" />
+                    <div className="text-xs text-text-muted space-y-0.5">
+                      <p className="font-mono">RECEIPT</p>
+                      <p>{selectedRequest.category}</p>
+                      <p>{formatCurrency(selectedRequest.amount)}</p>
+                      <p>{formatDate(selectedRequest.dateExpense)}</p>
+                      <p className="text-[10px] mt-1">{selectedRequest.receiptUrl || "No receipt attached"}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border" />
 
               {/* Approval Chain */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Approval Chain</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ApprovalChain
-                    steps={selectedRequest.approvalChain}
-                    currentStep={selectedRequest.currentStep}
-                  />
-                </CardContent>
-              </Card>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Approval Chain</h3>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary-50 text-primary">
+                    Step {selectedRequest.currentStep + 1} of {selectedRequest.approvalChain.length}
+                    {selectedRequest.currentStep < selectedRequest.approvalChain.length && (
+                      <span className="text-muted-foreground ml-1">
+                        — Awaiting {selectedRequest.approvalChain[selectedRequest.currentStep]?.role}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <ApprovalChain
+                  steps={selectedRequest.approvalChain}
+                  currentStep={selectedRequest.currentStep}
+                />
+              </div>
+            </div>
 
-              {/* Action Buttons */}
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Button
-                      className="flex-1 gap-2"
-                      onClick={() => handleAction("approve", selectedRequest.id)}
-                    >
-                      <CheckCircle2 size={16} />
-                      Approve
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      className="flex-1 gap-2"
-                      onClick={() => handleAction("reject", selectedRequest.id)}
-                    >
-                      <XCircle size={16} />
-                      Reject
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2"
-                      onClick={() => handleAction("revision", selectedRequest.id)}
-                    >
-                      <RotateCcw size={16} />
-                      Request Revision
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <ClipboardCheck size={36} className="mx-auto text-text-muted mb-3" />
-                <p className="text-muted-foreground">Select a request to view details</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+            {/* Panel footer — sticky action buttons */}
+            <div className="shrink-0 border-t border-border px-6 py-4 bg-surface">
+              <div className="flex items-center gap-3">
+                <Button
+                  className="flex-1 gap-2"
+                  onClick={() => handleAction("approve", selectedRequest.id)}
+                >
+                  <CheckCircle2 size={16} />
+                  Approve
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1 gap-2"
+                  onClick={() => handleAction("reject", selectedRequest.id)}
+                >
+                  <XCircle size={16} />
+                  Reject
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => handleAction("revision", selectedRequest.id)}
+                >
+                  <RotateCcw size={16} />
+                  Revision
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Action Dialog */}
       <Dialog open={!!actionDialog} onOpenChange={() => setActionDialog(null)}>

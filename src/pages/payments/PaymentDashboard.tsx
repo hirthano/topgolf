@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react"
 import {
-  DollarSign, Clock, AlertTriangle, FileWarning, TrendingUp,
+  DollarSign, Clock, AlertTriangle, FileWarning, TrendingUp, Download,
 } from "lucide-react"
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -12,9 +12,10 @@ import { PageHeader } from "@/components/shared/PageHeader"
 import { StatCard } from "@/components/shared/StatCard"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { transactions, reconciliationRecords, settlementRecords } from "@/data/mock-transactions"
-import { formatCurrency, formatCurrencyShort } from "@/lib/utils"
+import { formatCurrency, formatCurrencyShort, downloadCSV } from "@/lib/utils"
 import type { Transaction } from "@/types"
 
 // --- Topgolf color palette ---
@@ -389,8 +390,34 @@ export function PaymentDashboard() {
 
       {/* Branch Revenue Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle>Branch Revenue & Settlement Status</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => {
+              const csvData = branchRevenue.map((row) => {
+                const settledPct = row.revenue > 0 ? (row.settled / row.revenue) * 100 : 0
+                let status: string
+                if (settledPct >= 95) status = "Settled"
+                else if (row.overdue > 0) status = "Overdue"
+                else status = "Pending"
+                return {
+                  Branch: row.branch,
+                  "Total Revenue (IDR)": row.revenue,
+                  "Settled (IDR)": row.settled,
+                  "Pending (IDR)": row.pending,
+                  "Overdue/Failed (IDR)": row.overdue,
+                  Status: status,
+                }
+              })
+              downloadCSV(csvData, `branch-revenue-settlement-${TODAY}.csv`)
+            }}
+          >
+            <Download size={14} />
+            Export CSV
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

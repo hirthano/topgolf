@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from "react"
-import { Send, Sparkles, Bot, User, Lightbulb } from "lucide-react"
+import { Send, Sparkles, Bot, User, Lightbulb, Globe, Shield, Coins } from "lucide-react"
 
 import type { AIMessage } from "@/types"
 import { aiResponses } from "@/data/mock-ai-responses"
 import { generateId } from "@/lib/utils"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const SUGGESTION_CHIPS = [
   "What were our top 5 selling products last quarter?",
@@ -17,8 +19,32 @@ const SUGGESTION_CHIPS = [
   "Which product categories have declining sales?",
 ]
 
+// Off-topic detection
+const OFF_TOPIC_KEYWORDS = [
+  'weather', 'recipe', 'cook', 'movie', 'film', 'music', 'song',
+  'politics', 'election', 'president', 'football', 'soccer', 'basketball',
+  'crypto', 'bitcoin', 'stock market', 'dating', 'relationship',
+  'joke', 'tell me a joke', 'write a poem', 'homework', 'essay',
+]
+
+const GUARDRAIL_RESPONSE = `## Off-Topic Request
+
+I'm designed to help with **Topgolf sales analytics** and **golf business insights** specifically. I can help you with:
+
+- **Sales performance**: Revenue trends, branch comparisons, product analytics
+- **Golf industry**: Market trends, equipment insights, competitive landscape
+- **Business operations**: Inventory planning, seasonal strategies, customer segments
+- **Data analysis**: Category breakdowns, growth metrics, forecasting
+
+> **Tip:** Could you rephrase your question in the context of Topgolf's business? I'm here to help you make better data-driven decisions.`
+
 function matchResponse(input: string): string {
   const lower = input.toLowerCase()
+
+  // Check for off-topic queries
+  if (OFF_TOPIC_KEYWORDS.some(kw => lower.includes(kw))) {
+    return GUARDRAIL_RESPONSE
+  }
 
   // Match against AI response patterns
   for (const template of aiResponses) {
@@ -258,12 +284,17 @@ function renderMarkdown(content: string) {
   return <div className="space-y-0">{elements}</div>
 }
 
+const TOTAL_CREDITS = 500
+const INITIAL_USED = 153
+
 export function AIAssistantPage() {
   const [messages, setMessages] = useState<AIMessage[]>([])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [creditsUsed, setCreditsUsed] = useState(INITIAL_USED)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const creditsRemaining = TOTAL_CREDITS - creditsUsed
 
   const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -298,6 +329,7 @@ export function AIAssistantPage() {
       }
       setMessages(prev => [...prev, aiMessage])
       setIsTyping(false)
+      setCreditsUsed(prev => prev + 1)
     }, 500 + Math.random() * 500)
   }, [isTyping])
 
@@ -318,10 +350,55 @@ export function AIAssistantPage() {
           title="AI Sales Assistant"
           description="Ask questions about sales, products, branches, and market trends"
           actions={
-            <div className="flex items-center gap-2 text-sm text-gold">
-              <Sparkles size={16} />
-              <span className="font-medium">Powered by AI</span>
-            </div>
+            <TooltipProvider>
+              <div className="flex items-center gap-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-default">
+                      <Globe size={13} />
+                      <span>ID / EN</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs max-w-[200px]">
+                    Supports Bahasa Indonesia and English. Responds in the language you type in.
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-default">
+                      <Shield size={13} className="text-emerald-500" />
+                      <span>Topgolf Only</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                    This assistant only answers questions about Topgolf sales data, golf industry, and business operations. Off-topic queries are blocked.
+                  </TooltipContent>
+                </Tooltip>
+
+                <div className="h-4 w-px bg-border" />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={`flex items-center gap-1.5 text-xs cursor-default ${
+                      creditsRemaining < 50 ? 'text-red-500' : creditsRemaining < 150 ? 'text-amber-500' : 'text-muted-foreground'
+                    }`}>
+                      <Coins size={13} />
+                      <span className="font-medium">{creditsRemaining}</span>
+                      <span className="text-muted-foreground">/ {TOTAL_CREDITS}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="text-xs max-w-[220px]">
+                    Monthly AI credits remaining. Contact Finance/Admin to purchase additional credits when running low.
+                  </TooltipContent>
+                </Tooltip>
+
+                <div className="flex items-center gap-1.5 text-sm text-gold">
+                  <Sparkles size={14} />
+                  <span className="font-medium text-xs">AI</span>
+                </div>
+              </div>
+            </TooltipProvider>
           }
         />
       </div>

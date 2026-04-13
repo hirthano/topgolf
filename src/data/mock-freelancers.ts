@@ -1,4 +1,4 @@
-import type { Freelancer, FreelancerPayment, TaxArrangement } from '@/types'
+import type { Freelancer, FreelancerPayment, TaxArrangement, PaymentSchedule } from '@/types'
 
 // Deterministic seeded random
 function seededRandom(seed: number) {
@@ -122,6 +122,26 @@ function pickTaxSetup(): { arrangement: TaxArrangement; hasNPWP: boolean } {
   return { arrangement: 'gross_up', hasNPWP: false }
 }
 
+// Payment schedule based on role — each role has a natural default
+const rolePaymentSchedule: Record<string, PaymentSchedule[]> = {
+  'Golf Instructor': ['per_session', 'per_session', 'hybrid', 'weekly'],      // mostly per-session, some hybrid
+  'Event Host': ['per_session', 'per_session', 'per_session'],                // always per-event
+  'Fitting Specialist': ['per_session', 'weekly', 'weekly', 'monthly'],       // mix of weekly/session
+  'Photographer': ['per_session', 'per_session', 'monthly'],                  // mostly per-shoot
+  'Content Creator': ['monthly', 'monthly', 'hybrid'],                        // retainer-based
+  'Promoter': ['weekly', 'per_session', 'hybrid'],                            // weekly or per-event
+}
+
+function pickPaymentSchedule(role: string): PaymentSchedule {
+  const options = rolePaymentSchedule[role] ?? ['per_session']
+  return pick(options)
+}
+
+// For hybrid freelancers, generate a base retainer amount
+function pickBaseRetainer(def: FreelancerDef): number {
+  return roundIDR(def.minFee * randInt(3, 6))
+}
+
 function generateNPWP(): string {
   const parts = [
     String(randInt(10, 99)),
@@ -149,6 +169,7 @@ export const freelancers: Freelancer[] = freelancerDefs.map((def, i) => {
   const { arrangement, hasNPWP } = pickTaxSetup()
   const bank = pick(bankNames)
   const emailName = def.name.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z.]/g, '')
+  const schedule = pickPaymentSchedule(def.role)
 
   return {
     id: `FRL${String(i + 1).padStart(3, '0')}`,
@@ -158,6 +179,7 @@ export const freelancers: Freelancer[] = freelancerDefs.map((def, i) => {
     hasNPWP,
     npwpNumber: hasNPWP ? generateNPWP() : undefined,
     taxArrangement: arrangement,
+    paymentSchedule: schedule,
     bankName: bank,
     bankAccount: generateBankAccount(),
     phone: generatePhone(),
@@ -165,6 +187,7 @@ export const freelancers: Freelancer[] = freelancerDefs.map((def, i) => {
     status: rand() < 0.88 ? 'active' : 'inactive',
     totalPaidYTD: 0, // Will be calculated from payments
     lastPaymentDate: '', // Will be set from payments
+    baseRetainer: schedule === 'hybrid' ? pickBaseRetainer(def) : undefined,
   }
 })
 

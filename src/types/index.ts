@@ -140,6 +140,7 @@ export interface Employee {
 
 // Freelancer Module
 export type TaxArrangement = 'gross' | 'gross_up'
+export type PaymentSchedule = 'per_session' | 'weekly' | 'monthly' | 'hybrid'
 
 export interface Freelancer {
   id: string
@@ -149,6 +150,7 @@ export interface Freelancer {
   hasNPWP: boolean
   npwpNumber?: string
   taxArrangement: TaxArrangement
+  paymentSchedule: PaymentSchedule
   bankName: string
   bankAccount: string
   phone: string
@@ -156,6 +158,8 @@ export interface Freelancer {
   status: 'active' | 'inactive'
   totalPaidYTD: number
   lastPaymentDate: string
+  /** For hybrid: the fixed monthly retainer component */
+  baseRetainer?: number
 }
 
 export interface FreelancerPayment {

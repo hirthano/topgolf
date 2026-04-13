@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import {
   FileText, AlertTriangle, CheckCircle2, Package, Receipt, ClipboardCheck,
-  ArrowRight, Flag,
+  ArrowRight, Flag, Plus, Upload, Trash2,
 } from "lucide-react"
 
 import { PageHeader } from "@/components/shared/PageHeader"
@@ -18,6 +18,7 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { vendors, vendorInvoices } from "@/data/mock-vendors"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import type { VendorInvoice, InvoiceStatus } from "@/types"
@@ -89,10 +90,18 @@ function getApprovalThreshold(amount: number): string {
   return "Purchasing Manager"
 }
 
+interface LineItem {
+  description: string
+  qty: number
+  unitPrice: number
+}
+
 export function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [vendorFilter, setVendorFilter] = useState("all")
   const [selectedInvoice, setSelectedInvoice] = useState<VendorInvoice | null>(null)
+  const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [lineItems, setLineItems] = useState<LineItem[]>([{ description: "", qty: 1, unitPrice: 0 }])
 
   const filtered = useMemo(() => {
     return vendorInvoices.filter((inv) => {
@@ -112,6 +121,12 @@ export function InvoicesPage() {
       <PageHeader
         title="Invoice Management"
         description="Track, verify, and approve vendor invoices through the payment pipeline"
+        actions={
+          <Button className="gap-2" onClick={() => { setAddDialogOpen(true); setLineItems([{ description: "", qty: 1, unitPrice: 0 }]) }}>
+            <Plus size={16} />
+            Add Invoice
+          </Button>
+        }
       />
 
       {/* Stats */}
@@ -157,6 +172,171 @@ export function InvoicesPage() {
         exportFilename="vendor-invoices.csv"
         pageSize={10}
       />
+
+      {/* Add Invoice Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Invoice</DialogTitle>
+            <DialogDescription>Enter invoice details manually. All fields marked * are required.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Vendor + Invoice Number */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Vendor *</label>
+                <Select>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vendors.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Invoice Number *</label>
+                <Input placeholder="INV/2026/04/001" className="h-9 text-sm" />
+              </div>
+            </div>
+
+            {/* Dates + Terms */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Invoice Date *</label>
+                <Input type="date" defaultValue="2026-04-11" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Due Date *</label>
+                <Input type="date" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Payment Terms</label>
+                <Select>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select terms" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Net 15">Net 15</SelectItem>
+                    <SelectItem value="Net 30">Net 30</SelectItem>
+                    <SelectItem value="Net 45">Net 45</SelectItem>
+                    <SelectItem value="Net 60">Net 60</SelectItem>
+                    <SelectItem value="COD">COD</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Line Items */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">Line Items *</label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-xs h-7"
+                  onClick={() => setLineItems(prev => [...prev, { description: "", qty: 1, unitPrice: 0 }])}
+                >
+                  <Plus size={12} /> Add Line
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-[1fr_80px_120px_32px] gap-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold px-1">
+                  <span>Description</span>
+                  <span>Qty</span>
+                  <span>Unit Price</span>
+                  <span></span>
+                </div>
+                {lineItems.map((item, idx) => (
+                  <div key={idx} className="grid grid-cols-[1fr_80px_120px_32px] gap-2">
+                    <Input
+                      placeholder="Product/service description"
+                      value={item.description}
+                      onChange={(e) => {
+                        const next = [...lineItems]
+                        next[idx].description = e.target.value
+                        setLineItems(next)
+                      }}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.qty}
+                      onChange={(e) => {
+                        const next = [...lineItems]
+                        next[idx].qty = parseInt(e.target.value) || 1
+                        setLineItems(next)
+                      }}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      value={item.unitPrice || ""}
+                      onChange={(e) => {
+                        const next = [...lineItems]
+                        next[idx].unitPrice = parseInt(e.target.value) || 0
+                        setLineItems(next)
+                      }}
+                      className="h-8 text-xs"
+                    />
+                    <button
+                      onClick={() => setLineItems(prev => prev.filter((_, i) => i !== idx))}
+                      disabled={lineItems.length <= 1}
+                      className="flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:text-red-500 disabled:opacity-30 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {/* Total */}
+              <div className="flex justify-end pt-1 pr-10 text-sm">
+                <span className="text-muted-foreground mr-3">Subtotal:</span>
+                <span className="font-semibold text-foreground">
+                  {formatCurrency(lineItems.reduce((sum, li) => sum + li.qty * li.unitPrice, 0))}
+                </span>
+              </div>
+            </div>
+
+            {/* Tax + PO */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">PPN (Tax) Amount</label>
+                <Input type="number" placeholder="0" className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Purchase Order #</label>
+                <Input placeholder="PO-2026-xxx (optional)" className="h-9 text-sm" />
+              </div>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-foreground">Upload Invoice Document</label>
+              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/40 transition-colors cursor-pointer">
+                <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Drag & drop or <span className="text-primary font-medium">browse</span> to upload
+                </p>
+                <p className="text-xs text-text-muted mt-1">PDF, JPG, PNG up to 10MB</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setAddDialogOpen(false)} className="gap-1.5">
+              <Receipt size={14} />
+              Create Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invoice Detail Dialog */}
       <Dialog open={!!selectedInvoice} onOpenChange={() => setSelectedInvoice(null)}>

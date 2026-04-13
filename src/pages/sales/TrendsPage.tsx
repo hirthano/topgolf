@@ -1,12 +1,14 @@
 import {
   TrendingUp, Globe, ShoppingBag, Calendar, Users,
-  Target, Zap, BarChart3, Lightbulb, Sun,
+  Target, Zap, BarChart3, Lightbulb, Sun, Clock, RefreshCw,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import { PageHeader } from "@/components/shared/PageHeader"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+
+type InsightSource = 'internal' | 'industry'
 
 interface TrendInsight {
   id: string
@@ -19,6 +21,8 @@ interface TrendInsight {
   description: string
   stats: { label: string; value: string }[]
   recommendation: string
+  source: InsightSource
+  lastUpdated: string
 }
 
 const trends: TrendInsight[] = [
@@ -40,6 +44,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Expand regional presence strategically. Surabaya and Bandung branches should receive increased inventory allocation and marketing budget. Consider Medan and Makassar as next expansion targets based on golf course density and disposable income data.',
+    source: 'industry',
+    lastUpdated: '2026-04-01',
   },
   {
     id: 'trend-2',
@@ -59,6 +65,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Double down on MAJESTY and TITLEIST partnerships. Create exclusive Topgolf edition products with Japanese brand partners. Implement a premium customer loyalty program targeting high-value repeat buyers at SCBD, Pondok Indah, and Plaza Indonesia branches.',
+    source: 'internal',
+    lastUpdated: '2026-04-07',
   },
   {
     id: 'trend-3',
@@ -78,6 +86,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Invest in expanding fitting bays by 30% at top-5 Jakarta branches. Add TrackMan and Foresight launch monitors. Bundle fitting sessions with premium club purchases -- current 23% attach rate has significant room to grow to 50%+, representing an additional Rp 15B+ annual revenue opportunity.',
+    source: 'internal',
+    lastUpdated: '2026-04-07',
   },
   {
     id: 'trend-4',
@@ -97,6 +107,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Launch dedicated "Ladies Golf" and "Junior Academy" programs at 5 flagship branches. Partner with women golf influencers for social media campaigns. Stock women-specific equipment lines and create Instagram-worthy in-store experiences. This demographic represents the fastest-growing segment with high lifetime value.',
+    source: 'internal',
+    lastUpdated: '2026-04-07',
   },
   {
     id: 'trend-5',
@@ -116,6 +128,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Pre-position inventory 8 weeks before peak periods (MAJESTY supply chain lead time). Create Lebaran gift sets for corporate buyers at SCBD and Plaza Indonesia. Run "New Year, New Gear" promotions in January to mitigate the post-holiday dip. Staff up with 20% additional part-time promoters during peak weeks.',
+    source: 'internal',
+    lastUpdated: '2026-04-07',
   },
   {
     id: 'trend-6',
@@ -135,6 +149,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Hire a dedicated social commerce manager. Launch bi-weekly live shopping events on Shopee featuring product demos and flash deals. Negotiate improved settlement terms with Shopee (current T+4 vs stated T+3). Partner with 3-5 golf micro-influencers for authentic content creation.',
+    source: 'industry',
+    lastUpdated: '2026-04-01',
   },
   {
     id: 'trend-7',
@@ -154,6 +170,8 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Defend premium positioning by deepening brand partnerships (exclusive product launches with MAJESTY and TITLEIST). Differentiate through fitting services -- competitors cannot easily replicate this capability. Avoid price wars with MST Golf; instead, focus on value-added services and customer experience.',
+    source: 'industry',
+    lastUpdated: '2026-04-01',
   },
   {
     id: 'trend-8',
@@ -173,8 +191,15 @@ const trends: TrendInsight[] = [
     ],
     recommendation:
       'Introduce eco-friendly product lines from brands like adidas (Parley collection) and PUMA (sustainable materials). Implement recyclable packaging across all branches. Position Topgolf as the sustainability leader in Indonesian golf retail -- this differentiator will attract corporate partnerships and ESG-conscious consumers.',
+    source: 'industry',
+    lastUpdated: '2026-04-01',
   },
 ]
+
+function formatDateShort(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 export function TrendsPage() {
   return (
@@ -183,9 +208,19 @@ export function TrendsPage() {
         title="Trend Insights"
         description="Golf industry trends and actionable insights for Topgolf Indonesia"
         actions={
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Lightbulb size={16} className="text-gold" />
-            <span>{trends.length} insights curated</span>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <RefreshCw size={12} className="text-primary" />
+              <span className="text-xs">Internal: Weekly</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <RefreshCw size={12} className="text-gold" />
+              <span className="text-xs">Industry: Monthly</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Lightbulb size={14} className="text-gold" />
+              <span>{trends.length} insights</span>
+            </div>
           </div>
         }
       />
@@ -203,11 +238,24 @@ export function TrendsPage() {
                     </div>
                     <div className="min-w-0">
                       <CardTitle className="text-base">{trend.title}</CardTitle>
+                      <span className={`text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded ${
+                        trend.source === 'internal'
+                          ? 'bg-primary-50 text-primary'
+                          : 'bg-amber-50 text-amber-600'
+                      }`}>
+                        {trend.source === 'internal' ? 'Internal Data' : 'Industry'}
+                      </span>
                     </div>
                   </div>
-                  <Badge variant={trend.badgeVariant} className="shrink-0">
-                    {trend.badge}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={trend.badgeVariant}>
+                      {trend.badge}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Clock size={9} />
+                      {formatDateShort(trend.lastUpdated)}
+                    </span>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Users, UserPlus, Shield, ShieldOff, Search } from "lucide-react"
+import { Users, UserPlus, Shield, ShieldOff, Search, CalendarClock } from "lucide-react"
 
 import { PageHeader } from "@/components/shared/PageHeader"
 import { StatCard } from "@/components/shared/StatCard"
@@ -23,6 +23,13 @@ import type { ColumnDef } from "@/components/shared/DataTable"
 
 const roles = Array.from(new Set(freelancers.map((f) => f.role))).sort()
 
+const SCHEDULE_LABELS: Record<string, { label: string; color: string }> = {
+  per_session: { label: "Per Session", color: "bg-sky-100 text-sky-700" },
+  weekly: { label: "Weekly", color: "bg-violet-100 text-violet-700" },
+  monthly: { label: "Monthly", color: "bg-emerald-100 text-emerald-700" },
+  hybrid: { label: "Hybrid", color: "bg-amber-100 text-amber-700" },
+}
+
 const columns: ColumnDef<Freelancer & Record<string, unknown>>[] = [
   {
     header: "Name",
@@ -39,6 +46,18 @@ const columns: ColumnDef<Freelancer & Record<string, unknown>>[] = [
     header: "Role",
     accessor: "role" as keyof Freelancer,
     sortable: true,
+  },
+  {
+    header: "Pay Schedule",
+    accessor: "paymentSchedule" as keyof Freelancer,
+    render: (v) => {
+      const config = SCHEDULE_LABELS[v as string]
+      return config ? (
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${config.color}`}>
+          {config.label}
+        </span>
+      ) : "-"
+    },
   },
   {
     header: "Tax Status",
@@ -194,6 +213,33 @@ export function FreelancerDirectory() {
                     <StatusBadge status={selectedFreelancer.status} />
                   </div>
                 </div>
+                {/* Payment Schedule */}
+                <div className="rounded-lg border border-border p-4 space-y-3 bg-background">
+                  <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <CalendarClock size={14} className="text-primary" />
+                    Payment Schedule
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const config = SCHEDULE_LABELS[selectedFreelancer.paymentSchedule]
+                        return config ? (
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${config.color}`}>
+                            {config.label}
+                          </span>
+                        ) : null
+                      })()}
+                    </div>
+                    <p className="text-xs text-text-muted">
+                      {selectedFreelancer.paymentSchedule === 'per_session' && 'Paid per engagement/session. Each session is tracked and invoiced individually.'}
+                      {selectedFreelancer.paymentSchedule === 'weekly' && 'Aggregated weekly payment. Daily activity logs are collected and paid out weekly.'}
+                      {selectedFreelancer.paymentSchedule === 'monthly' && 'Fixed monthly retainer fee regardless of activity count. Processed monthly.'}
+                      {selectedFreelancer.paymentSchedule === 'hybrid' && `Base retainer of ${formatCurrency(selectedFreelancer.baseRetainer ?? 0)}/month + per-session bonus for additional work.`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tax Profile */}
                 <div className="rounded-lg border border-border p-4 space-y-3 bg-background">
                   <p className="text-sm font-semibold text-foreground">Tax Profile</p>
                   <div className="grid grid-cols-2 gap-3">
@@ -284,6 +330,20 @@ export function FreelancerDirectory() {
                 <label className="text-sm font-medium text-foreground">Phone</label>
                 <Input placeholder="0812-xxxx-xxxx" />
               </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Payment Schedule</label>
+              <Select>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select schedule" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="per_session">Per Session / Per Event</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly (Retainer)</SelectItem>
+                  <SelectItem value="hybrid">Hybrid (Retainer + Per Session)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
